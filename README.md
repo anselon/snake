@@ -17,4 +17,3 @@ set timer off
 add obstacle/wall
 make keys opposite
 
-
