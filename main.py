@@ -28,7 +28,7 @@ class World( ShowBase ):
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         
         self.bricks         = deque( )
-        self.make_fruit( )
+        
 
         self.draw_snake( )
         self.accept( "escape",      sys.exit )
@@ -43,6 +43,7 @@ class World( ShowBase ):
         self.game_task.last = 0
         self.period         = 0.15
         self.pause          = False
+        self.make_fruit( )
 
     def game_loop( self, task ):
         dt = task.time - task.last
@@ -82,13 +83,16 @@ class World( ShowBase ):
 
     def make_fruit( self ):
         randNumber = randrange(0,10)
-        if randNumber < 5:
+        if randNumber < 3:
             self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+        elif randNumber > 3 & randNumber < 7:
+            self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.speed_up()
         else:
-            self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) ) 
+            self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
 
     def update_fruit( self ):
-        x, y = self.fruit.getX( ), self.fruit.getZ( )
+        x, y = self.fruit.getX( ), self.fruit.getY( )
         if ( x, y ) != self.snake.fruit:
             self.fruit.setPos( self.snake.fruit[ X ], SPRITE_POS, self.snake.fruit[ Y ] )
 
@@ -101,5 +105,14 @@ class World( ShowBase ):
         if self.pause:  self.pause = False
         else:           self.pause = True
 
+
+    def speed_up(self):
+        if self.period >= .1 :
+            self.period = self.period - .05
+
+    def speed_down(self):
+        if self.period <= .4:
+            self.period = self.period + .05
+                    
 w   = World( )
 w.run( )
