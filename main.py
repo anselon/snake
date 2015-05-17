@@ -11,6 +11,7 @@ from direct.task.Task               import Task
 from settings                       import *
 from helpers                        import genLabelText, loadObject
 from collections                    import deque
+from random         import randrange
 
 class World( ShowBase ):
     def __init__ ( self ):
@@ -45,8 +46,8 @@ class World( ShowBase ):
 
     def game_loop( self, task ):
         dt = task.time - task.last
-        if task.time >= 10.30:
-            return task.done
+        # if task.time >= 10.30:
+        #     return task.done
         if not self.snake.alive: 
             return task.done
         if self.pause:
@@ -80,7 +81,11 @@ class World( ShowBase ):
             self.bricks.appendleft( new_head )
 
     def make_fruit( self ):
-        self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) ) 
+        randNumber = randrange(0,10)
+        if randNumber < 5:
+            self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+        else:
+            self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) ) 
 
     def update_fruit( self ):
         x, y = self.fruit.getX( ), self.fruit.getZ( )
