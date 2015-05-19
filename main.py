@@ -26,7 +26,6 @@ class World( ShowBase ):
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
         self.pause_text     = genLabelText( "SPACE: Pause", 1)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
-        
         self.bricks         = deque( )
         
 
@@ -37,22 +36,30 @@ class World( ShowBase ):
         self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
-        self.accept( "space",       self.tooggle_pause )
+        self.accept( "space",       self.toggle_pause )
 
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
         self.game_task.last = 0
         self.period         = 0.15
+        self.timer_flag     = False
         self.pause          = False
+        self.timer_start    = 0
         self.make_fruit( )
 
     def game_loop( self, task ):
         dt = task.time - task.last
-        # if task.time >= 10.30:
-        #     return task.done
+        if self.timer_flag:
+            if self.timer_start == 0:
+                self.timer_start = task.time
+            timer_dt = task.time - self.timer_start
+            self.update_timer(timer_dt)
+            if (timer_dt >= 10.00):
+                return task.done
         if not self.snake.alive: 
             return task.done
         if self.pause:
             return task.cont
+    
         elif dt >= self.period:
             task.last = task.time
             self.snake.move_forward( )
@@ -77,19 +84,37 @@ class World( ShowBase ):
                 brick   = self.bricks[ i ]
                 brick.setPos( point[ X ], SPRITE_POS, point[ Y ] )
         except IndexError:
+            self.reset()
             new_head    = self.fruit
             self.make_fruit( )
             self.bricks.appendleft( new_head )
+ 
+
+    def reset(self):
+        #self.period         = 0.15
+        if self.timer_flag:
+            self.timer.removeNode( )
+        self.timer_flag = False
+        self.timer_start = 0 
+        self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
+        self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
+        self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
+        self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
 
     def make_fruit( self ):
         randNumber = randrange(0,10)
+      
         if randNumber < 3:
             self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.set_timer()
         elif randNumber > 3 & randNumber < 7:
             self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
-        else:
+        elif randNumber > 6:
             self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.change_keys()
+        else:
+            self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
 
     def update_fruit( self ):
         x, y = self.fruit.getX( ), self.fruit.getY( )
@@ -101,7 +126,7 @@ class World( ShowBase ):
             self.score.removeNode( )
         self.score = genLabelText( "Score: %s" % self.snake.get_score( ), 0, left=False )
 
-    def tooggle_pause( self ):
+    def toggle_pause( self ):
         if self.pause:  self.pause = False
         else:           self.pause = True
 
@@ -113,6 +138,29 @@ class World( ShowBase ):
     def speed_down(self):
         if self.period <= .4:
             self.period = self.period + .05
+    
+
+    def set_timer(self):
+        if self.timer_flag:
+            self.timer.removeNode( )
+        self.timer_flag = True
+        self.timer = genLabelText( "TIMER: OFF" , 1, left=False )
+
+    
+   
+    def update_timer( self, time):
+        if self.timer_flag:
+            self.timer.removeNode( )
+        self.timer = genLabelText( "TIMER: %s" % time, 1, left=False )
+
+
+    def change_keys(self):
+        self.accept( "arrow_up",    self.snake.turn, [ NEG_Y ] )
+        self.accept( "arrow_down",  self.snake.turn, [ POS_Y ] )
+        self.accept( "arrow_left",  self.snake.turn, [ POS_X ] )
+        self.accept( "arrow_right", self.snake.turn, [ NEG_X ] )
+
+
                     
 w   = World( )
 w.run( )
