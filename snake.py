@@ -39,3 +39,5 @@ class Snake( object ):
 
     def get_score( self ):
         return len( self.body ) - self.init_len
+
+    

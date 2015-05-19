@@ -102,19 +102,20 @@ class World( ShowBase ):
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
 
     def make_fruit( self ):
-        randNumber = randrange(0,10)
+        randNumber = randrange(0,4,1)
       
-        if randNumber < 3:
+        if randNumber == 0:
             self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.set_timer()
-        elif randNumber > 3 & randNumber < 7:
+        elif randNumber == 1:
             self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
-        elif randNumber > 6:
+        elif randNumber == 2:
             self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
-            self.change_keys()
+            self.speed_down()
         else:
             self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.change_keys()
 
     def update_fruit( self ):
         x, y = self.fruit.getX( ), self.fruit.getY( )
@@ -132,12 +133,12 @@ class World( ShowBase ):
 
 
     def speed_up(self):
-        if self.period >= .1 :
-            self.period = self.period - .05
+        if self.period >= .07 :
+            self.period = self.period - .03
 
     def speed_down(self):
-        if self.period <= .4:
-            self.period = self.period + .05
+        if self.period <= .15:
+            self.period = self.period + .03
     
 
     def set_timer(self):
