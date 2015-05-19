@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+﻿# -*- coding: utf-8 -*- 
 
 import sys
 import snake
@@ -53,7 +53,7 @@ class World( ShowBase ):
                 self.timer_start = task.time
             timer_dt = task.time - self.timer_start
             self.update_timer(timer_dt)
-            if (timer_dt >= 10.00):
+            if (timer_dt >= 5.00):
                 return task.done
         if not self.snake.alive: 
             return task.done
@@ -150,9 +150,10 @@ class World( ShowBase ):
     
    
     def update_timer( self, time):
+        ttime = 5 - time
         if self.timer_flag:
             self.timer.removeNode( )
-        self.timer = genLabelText( "TIMER: %s" % time, 1, left=False )
+        self.timer = genLabelText( "TIMER: %s" % ttime, 1, left=False )
 
 
     def change_keys(self):
