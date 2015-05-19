@@ -102,19 +102,19 @@ class World( ShowBase ):
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
 
     def make_fruit( self ):
-        randNumber = randrange(0,4,1)
+        randNumber = randrange(0, 10,1)
       
-        if randNumber == 0:
+        if randNumber <4:
             self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.set_timer()
-        elif randNumber == 1:
+        elif 3< randNumber <8:
             self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
-        elif randNumber == 2:
-            self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+        elif 7 < randNumber < 9:
+            self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_down()
         else:
-            self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.change_keys()
 
     def update_fruit( self ):
