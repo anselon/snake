@@ -134,7 +134,7 @@ class World( ShowBase ):
 
     def speed_up(self):
         if self.period >= .07 :
-            self.period = self.period - .03
+            self.period = self.period - .02
 
     def speed_down(self):
         if self.period <= .15:
