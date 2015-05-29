@@ -26,10 +26,13 @@ class World( ShowBase ):
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
         self.pause_text     = genLabelText( "SPACE: Pause", 1)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
-        self.bricks         = deque( )
+        self.bricks         = deque()
+        self.wall           = deque()
         
 
         self.draw_snake( )
+
+
         self.accept( "escape",      sys.exit )
         self.accept( "enter",       self.restart )
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
@@ -67,6 +70,8 @@ class World( ShowBase ):
             self.update_snake( )
             self.update_fruit( )
             self.update_score( )
+            self.gen_wall( )
+            self.draw_wall( )
             return task.cont
         else:
             return task.cont
@@ -77,6 +82,20 @@ class World( ShowBase ):
             brick = loadObject( "cat", pos=Point2( point[ X ], point[ Y ] ) )
             self.bricks.append( brick )
 
+    def draw_wall( self ):
+        for point in self.wall:
+            bomb = loadObject( "cat", pos=Point2( point[ X ], point[ Y ] ) )
+
+
+    def gen_wall( self ):
+
+        while (len(self.wall) < 3):
+            self.wall.append((randrange(self.fruit.getX() - 3, self.fruit.getX() + 3), randrange(self.fruit.getX() - 3, self.fruit.getX() + 3)))
+
+            for bomb in self.wall:
+                while bomb in self.snake.body:
+                    bomb    = ( randrange( MIN_X, MAX_X ), randrange( MIN_Y, MAX_Y ) )
+
     def update_snake( self ):
         try:
             for i in xrange( len( self.snake.body ) ):
@@ -85,7 +104,7 @@ class World( ShowBase ):
                 brick.setPos( point[ X ], SPRITE_POS, point[ Y ] )
         except IndexError:
             self.reset()
-            new_head    = self.fruit
+            new_head    = self.fruit.getX
             self.make_fruit( )
             self.bricks.appendleft( new_head )
  
