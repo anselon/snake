@@ -65,13 +65,12 @@ class World( ShowBase ):
     
         elif dt >= self.period:
             task.last = task.time
+            self.check_bomb( )
             self.snake.move_forward( )
             self.snake.check_state( )
             self.update_snake( )
             self.update_fruit( )
             self.update_score( )
-            self.gen_wall( )
-            self.draw_wall( )
             return task.cont
         else:
             return task.cont
@@ -83,18 +82,23 @@ class World( ShowBase ):
             self.bricks.append( brick )
 
     def draw_wall( self ):
-        for point in self.wall:
-            bomb = loadObject( "cat", pos=Point2( point[ X ], point[ Y ] ) )
+        for square in self.wall:
+            bomb = loadObject( "bomb", pos=Point2( square[ X ], square[ Y ] ) )
+        # self.bricks.append( bomb )
 
 
     def gen_wall( self ):
 
         while (len(self.wall) < 3):
+            #TO DO: build in range of box 
             self.wall.append((randrange(self.fruit.getX() - 3, self.fruit.getX() + 3), randrange(self.fruit.getX() - 3, self.fruit.getX() + 3)))
 
-            for bomb in self.wall:
-                while bomb in self.snake.body:
-                    bomb    = ( randrange( MIN_X, MAX_X ), randrange( MIN_Y, MAX_Y ) )
+    def check_bomb( self ):
+        head = self.snake.body[0]
+        next = ( head[X] + self.snake.vector[X], head[Y] + self.snake.vector[Y] )
+        for bomb in self.wall:
+            if next == bomb:
+                self.snake.alive = False
 
     def update_snake( self ):
         try:
@@ -104,10 +108,9 @@ class World( ShowBase ):
                 brick.setPos( point[ X ], SPRITE_POS, point[ Y ] )
         except IndexError:
             self.reset()
-            new_head    = self.fruit.getX
+            new_head    = self.fruit
             self.make_fruit( )
             self.bricks.appendleft( new_head )
- 
 
     def reset(self):
         #self.period         = 0.15
@@ -126,12 +129,16 @@ class World( ShowBase ):
         if randNumber <4:
             self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.set_timer()
-        elif 3< randNumber <8:
+        elif 3< randNumber <5:
             self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
+        elif 4<randNumber<8:
+            self.gen_wall( )
+            self.draw_wall( )
         elif 7 < randNumber < 9:
             self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_down()
+
         else:
             self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.change_keys()
