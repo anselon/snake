@@ -11,70 +11,88 @@ from direct.task.Task               import Task
 from settings                       import *
 from helpers                        import genLabelText, loadObject
 from collections                    import deque
-from random         import randrange
+from random                         import randrange
 
 class World( ShowBase ):
     def __init__ ( self ):
         ShowBase.__init__( self )
-
+        self.mode           = False
+        self.choose_mode    = False
+        self.start = False
         self.disableMouse( )
         self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
         self.snake.gen_fruit( )
 
-        self.background     = loadObject( "background", scale=9000, depth=200, transparency=False )
-        self.gameboard      = loadObject( "background", scale=39.5, depth=100, transparency=False )
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
         self.pause_text     = genLabelText( "SPACE: Pause", 1)
+        self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 2)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         self.bricks         = deque( )
         
 
-        self.draw_snake( )
+        
         self.accept( "escape",      sys.exit )
-        self.accept( "enter",       self.restart )
+        self.accept( "enter",       self.check_start )
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
         self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
-        self.accept( "space",       self.toggle_pause )
+        self.accept( "shift",       self.toggle_pause)
+        self.accept( "a",       self.toggle_mode_one)
+        self.accept("d",        self.toggle_mode_two)
 
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
         self.game_task.last = 0
         self.period         = 0.15
         self.timer_flag     = False
         self.pause          = False
+        
         self.timer_start    = 0
-        self.make_fruit( )
+        
 
     def game_loop( self, task ):
-        dt = task.time - task.last
-        if self.timer_flag:
-            if self.timer_start == 0:
-                self.timer_start = task.time
-            timer_dt = task.time - self.timer_start
-            self.update_timer(timer_dt)
-            if (timer_dt >= 5.00):
+        if self.start == True:
+            dt = task.time - task.last
+            if self.timer_flag:
+                if self.timer_start == 0:
+                    self.timer_start = task.time
+                timer_dt = task.time - self.timer_start
+                self.update_timer(timer_dt)
+                if (timer_dt >= 10.00):
+                    return task.done
+            if not self.snake.alive: 
                 return task.done
-        if not self.snake.alive: 
-            return task.done
-        if self.pause:
-            return task.cont
-    
-        elif dt >= self.period:
-            task.last = task.time
-            self.snake.move_forward( )
-            self.snake.check_state( )
-            self.update_snake( )
-            self.update_fruit( )
-            self.update_score( )
-            return task.cont
+            if self.pause:
+                return task.cont
+        
+            elif dt >= self.period:
+                task.last = task.time
+                self.snake.move_forward( )
+                self.snake.check_state( )
+                self.update_snake( )
+                self.update_fruit( )
+                self.update_score( )
+
+                return task.cont
+            else:
+                return task.cont
         else:
+            if self.choose_mode:
+                self.background     = loadObject( "background", self.mode , scale=9000, depth=200, transparency=False )
+                self.gameboard      = loadObject( "background", self.mode, scale=39.5, depth=100, transparency=False )
+
+                self.draw_snake( )
+
+                self.make_fruit( )
+                self.start = True
+                return task.cont
             return task.cont
+
 
 
     def draw_snake( self ):
         for point in self.snake.body:
-            brick = loadObject( "cat", pos=Point2( point[ X ], point[ Y ] ) )
+            brick = loadObject( "cat", self.mode, pos=Point2( point[ X ], point[ Y ] ) )
             self.bricks.append( brick )
 
     def update_snake( self ):
@@ -105,16 +123,16 @@ class World( ShowBase ):
         randNumber = randrange(0, 10,1)
       
         if randNumber <4:
-            self.fruit = loadObject( "cat", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.fruit = loadObject( "cat", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.set_timer()
         elif 3< randNumber <8:
-            self.fruit = loadObject( "cat1", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.fruit = loadObject( "cat1", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
         elif 7 < randNumber < 9:
-            self.fruit = loadObject( "cat3", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.fruit = loadObject( "cat3", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_down()
         else:
-            self.fruit = loadObject( "cat2", pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+            self.fruit = loadObject( "cat2", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.change_keys()
 
     def update_fruit( self ):
@@ -130,6 +148,23 @@ class World( ShowBase ):
     def toggle_pause( self ):
         if self.pause:  self.pause = False
         else:           self.pause = True
+
+
+    def toggle_mode_one( self ):
+        if self.choose_mode == False:
+            self.mode = True
+        self.choose_mode = True
+        
+
+    def toggle_mode_two( self ):
+        if self.choose_mode == False:
+            self.mode = False
+        self.choose_mode = True
+        
+
+    def check_start( self ):
+        self.start = True
+    
 
 
     def speed_up(self):
@@ -150,7 +185,7 @@ class World( ShowBase ):
     
    
     def update_timer( self, time):
-        ttime = 5 - time
+        ttime = 10 - time
         if self.timer_flag:
             self.timer.removeNode( )
         self.timer = genLabelText( "TIMER: %s" % ttime, 1, left=False )
