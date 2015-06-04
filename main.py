@@ -28,13 +28,11 @@ class World( ShowBase ):
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         self.bricks         = deque()
         self.wall           = deque()
-        
-
         self.draw_snake( )
 
 
         self.accept( "escape",      sys.exit )
-        self.accept( "enter",       self.restart )
+        self.accept( "r",       self.game_restart )
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
         self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
@@ -74,6 +72,24 @@ class World( ShowBase ):
             return task.cont
         else:
             return task.cont
+
+    def game_restart( self ):
+        self.snake.unl
+        self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
+        self.snake.gen_fruit( )
+        self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
+        self.bricks         = deque()
+        self.wall           = deque()
+        self.draw_snake( )
+        self.game_task.remove()
+        self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
+        self.game_task.last = 0
+        self.period         = 0.15
+        self.timer_flag     = False
+        self.pause          = False
+        self.timer_start    = 0
+        self.make_fruit( )
+
 
 
     def draw_snake( self ):
