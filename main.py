@@ -105,6 +105,7 @@ class World( ShowBase ):
         self.bombs           = deque()
 
 
+
         self.score.removeNode()
         self.taskMgr.remove("GameLoop")
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
@@ -156,6 +157,8 @@ class World( ShowBase ):
             if next == bomb:
                 self.snake.alive = False
 
+
+
     def update_snake( self ):
         try:
             for i in xrange( len( self.snake.body ) ):
@@ -170,11 +173,14 @@ class World( ShowBase ):
             if len(self.bombs)>0:
                 for bomb in self.bombs:
                     bomb.removeNode()
+                self.wall = deque()
+                self.bombs = deque()
 
     def reset(self):
         #self.period         = 0.15
         if self.timer_flag:
             self.timer.removeNode( )
+
         self.timer_flag = False
         self.timer_start = 0 
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
