@@ -1,5 +1,6 @@
 ﻿# -*- coding: utf-8 -*- 
 import sys
+import logging
 import snake
 
 from panda3d.core                   import Point2
@@ -25,11 +26,12 @@ class World( ShowBase ):
         self.start = False
         self.disableMouse( )
         self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
-
+        self.snake.gen_fruit( )
 
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
         self.pause_text     = genLabelText( "SPACE: Pause", 1)
-        self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 2)
+        self.restart_text    = genLabelText( "R  : Restart", 2 )
+        self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 3)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         self.bricks         = deque()
         self.wall           = deque()
@@ -128,8 +130,6 @@ class World( ShowBase ):
         self.accept( "a",       self.toggle_mode_one)
         self.accept("d",        self.toggle_mode_two)
         self.draw_snake( )
-
-
         self.make_fruit( )
 
 
@@ -147,9 +147,21 @@ class World( ShowBase ):
 
     def gen_wall( self ):
         while (len(self.wall) < 3):
-            #TO DO: build in range of box 
-            self.wall.append((randrange(self.fruit.getX()+1 , self.fruit.getX() + 5), randrange(self.fruit.getX() + 1, self.fruit.getX() + 5)))
+            max_x_bomb_coord = (self.snake.fruit[X]+3) if ((self.snake.fruit[X] + 3) < MAX_X) else MAX_X-1
+            max_y_bomb_coord = (self.snake.fruit[Y]+3) if ((self.snake.fruit[Y] + 3) < MAX_Y) else MAX_Y-1
+           
+            min_x_bomb_coord = (self.snake.fruit[X]-3) if ((self.snake.fruit[X] - 3) > MIN_X) else MIN_X+1
+            min_y_bomb_coord = (self.snake.fruit[Y]-3) if ((self.snake.fruit[Y] - 3) > MIN_Y) else MIN_Y+1
 
+            bomb = (randrange(min_x_bomb_coord , max_x_bomb_coord,1), randrange(min_y_bomb_coord, max_y_bomb_coord,1))
+            #check that bomb isn't placed directly in front of snake            
+            head = self.snake.body[0]
+            next = ( head[X] + self.snake.vector[X], head[Y] + self.snake.vector[Y] )
+            #check that bomb isn't on top of fruit
+            if (next != bomb) and (bomb!=self.snake.fruit):
+                self.wall.append(bomb)
+
+    #
     def check_bomb( self ):
         head = self.snake.body[0]
         next = ( head[X] + self.snake.vector[X], head[Y] + self.snake.vector[Y] )
@@ -204,7 +216,6 @@ class World( ShowBase ):
         elif 7 < randNumber < 9:
             self.fruit = loadObject( "cat3", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_down()
-
         else:
             self.fruit = loadObject( "cat2", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.change_keys()
