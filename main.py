@@ -12,11 +12,7 @@ from settings                       import *
 from helpers                        import genLabelText, loadObject
 from collections                    import deque
 from random                         import randrange
-#TODO: merge background -- DONE
-#TODO: finish restart -- DONE
-#TODO: make bombs disappear after -- DONE
-#TODO: fix range for bombs
-#TODO: make sure bombs don't overlap
+
 
 class World( ShowBase ):
     def __init__ ( self ):
@@ -29,13 +25,17 @@ class World( ShowBase ):
         self.snake.gen_fruit( )
 
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
-        self.pause_text     = genLabelText( "SPACE: Pause", 1)
-        self.restart_text    = genLabelText( "R  : Restart", 2 )
+        self.restart_text    = genLabelText( "R  : Restart", 1 )
         self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 3)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         self.bricks         = deque()
         self.wall           = deque()
         self.bombs          = deque()
+        with open('topscore.txt', 'r') as f:
+            first_line = f.readline()
+            f.close()
+        self.top_score = first_line
+        self.top_score_text          = genLabelText( "Top Score: %s" % self.top_score,2, left =True)
 
         self.accept( "escape",      sys.exit )
         self.accept( "r",       self.game_restart )
@@ -53,7 +53,6 @@ class World( ShowBase ):
         self.period         = 0.15
         self.timer_flag     = False
         self.pause          = False
-
         self.timer_start    = 0
         
 
@@ -66,8 +65,10 @@ class World( ShowBase ):
                 timer_dt = task.time - self.timer_start
                 self.update_timer(timer_dt)
                 if (timer_dt >= 10.00):
+                    self.check_top_score()
                     return task.done
             if not self.snake.alive: 
+                self.check_top_score()
                 return task.done
             if self.pause:
                 return task.cont
@@ -91,7 +92,9 @@ class World( ShowBase ):
                 self.draw_snake( )
                 self.make_fruit( )
                 self.start = True
+                self.mode_text.removeNode( )
                 return task.cont
+
             return task.cont
 
     def game_restart( self ):
@@ -105,11 +108,19 @@ class World( ShowBase ):
         self.bricks         = deque()
         self.wall           = deque()
         self.bombs           = deque()
-
-
-
+        with open('topscore.txt', 'r') as f:
+            best_score = f.readline()
+            f.close()
+        self.top_score = int(best_score)
+        self.top_score_text.removeNode()
+        self.top_score_text          = genLabelText( "Top Score: %s" % self.top_score,2, left =True)
         self.score.removeNode()
         self.taskMgr.remove("GameLoop")
+        self.choose_mode    = False
+        self.start          = False
+        self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 3)
+        self.accept( "a",       self.toggle_mode_one)
+        self.accept("d",        self.toggle_mode_two)
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
         self.game_task.last = 0
         self.period         = 0.15
@@ -119,7 +130,6 @@ class World( ShowBase ):
 
         self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
         self.snake.gen_fruit( )
-
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
 
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
@@ -127,12 +137,18 @@ class World( ShowBase ):
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
         self.accept( "shift",       self.toggle_pause)
-        self.accept( "a",       self.toggle_mode_one)
-        self.accept("d",        self.toggle_mode_two)
-        self.draw_snake( )
-        self.make_fruit( )
 
 
+
+
+
+    def check_top_score(self):
+        if self.snake.get_score( ) > self.top_score:
+            self.top_score = self.snake.get_score( )
+            logging.warning(self.top_score)
+            with open('topscore.txt', 'w') as f:
+                f.write(str(self.top_score))
+                f.close()
 
 
     def draw_snake( self ):
