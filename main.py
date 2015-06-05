@@ -11,10 +11,10 @@ from settings                       import *
 from helpers                        import genLabelText, loadObject
 from collections                    import deque
 from random                         import randrange
-#TODO: merge background
-#TODO: finish restart
+#TODO: merge background -- DONE
+#TODO: finish restart -- DONE
+#TODO: make bombs disappear after -- DONE
 #TODO: fix range for bombs
-#TODO: make bombs disappear after
 #TODO: make sure bombs don't overlap
 
 class World( ShowBase ):
@@ -33,6 +33,7 @@ class World( ShowBase ):
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
         self.bricks         = deque()
         self.wall           = deque()
+        self.bombs          = deque()
 
         self.accept( "escape",      sys.exit )
         self.accept( "r",       self.game_restart )
@@ -50,7 +51,7 @@ class World( ShowBase ):
         self.period         = 0.15
         self.timer_flag     = False
         self.pause          = False
-        
+
         self.timer_start    = 0
         
 
@@ -83,7 +84,7 @@ class World( ShowBase ):
 
         else:
             if self.choose_mode:
-                self.background     = loadObject( "background", self.mode , scale=9000, depth=200, transparency=False )
+                self.background     = loadObject( "background2", self.mode, scale=140, depth=200, transparency=False )
                 self.gameboard      = loadObject( "background", self.mode, scale=39.5, depth=100, transparency=False )
                 self.draw_snake( )
                 self.make_fruit( )
@@ -92,19 +93,42 @@ class World( ShowBase ):
             return task.cont
 
     def game_restart( self ):
-        self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
-        self.snake.gen_fruit( )
-        self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
+        for point in self.bricks:
+            point.removeNode()
+        for bomb in self.bombs:
+            bomb.removeNode()
+        self.fruit.removeNode()
+        if self.timer_flag:
+            self.timer.removeNode()
         self.bricks         = deque()
         self.wall           = deque()
-        self.draw_snake( )
-        self.game_task.remove()
+        self.bombs           = deque()
+
+
+        self.score.removeNode()
+        self.taskMgr.remove("GameLoop")
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
         self.game_task.last = 0
         self.period         = 0.15
         self.timer_flag     = False
         self.pause          = False
         self.timer_start    = 0
+
+        self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
+        self.snake.gen_fruit( )
+
+        self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
+
+        self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
+        self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
+        self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
+        self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
+        self.accept( "shift",       self.toggle_pause)
+        self.accept( "a",       self.toggle_mode_one)
+        self.accept("d",        self.toggle_mode_two)
+        self.draw_snake( )
+
+
         self.make_fruit( )
 
 
@@ -118,7 +142,8 @@ class World( ShowBase ):
     def draw_wall( self ):
         for square in self.wall:
             bomb = loadObject( "bomb", self.mode, pos=Point2( square[ X ], square[ Y ] ) )
-    
+            self.bombs.append( bomb )
+
     def gen_wall( self ):
         while (len(self.wall) < 3):
             #TO DO: build in range of box 
@@ -142,6 +167,9 @@ class World( ShowBase ):
             new_head    = self.fruit
             self.make_fruit( )
             self.bricks.appendleft( new_head )
+            if len(self.bombs)>0:
+                for bomb in self.bombs:
+                    bomb.removeNode()
 
     def reset(self):
         #self.period         = 0.15
@@ -183,7 +211,7 @@ class World( ShowBase ):
     def update_score( self ):
         if self.score:
             self.score.removeNode( )
-        self.score = genLabelText( "Score: %s" % self.snake.get_score( ), 0, left=False )
+        self.score = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
 
     def toggle_pause( self ):
         if self.pause:  self.pause = False
