@@ -188,11 +188,11 @@ class World( ShowBase ):
         if randNumber <4:
             self.fruit = loadObject( "cat", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.set_timer()
-        elif 3< randNumber <5:
+        elif 3< randNumber <7:
             self.fruit = loadObject( "cat1", self.mode,pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_up()
-        elif 4<randNumber<8:
-            self.fruit = loadObject( "cat1", self.mode,pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
+        elif 6<randNumber<8:
+            self.fruit = loadObject( "cat4", self.mode,pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.gen_wall( )
             self.draw_wall( )
         elif 7 < randNumber < 9:
