@@ -13,6 +13,7 @@ class Snake( object ):
         self.alive          = True
         self.init_len       = len( self.body )
 
+    #check  if snake has hit an edge or itself
     def check_state( self ):
         head = self.body[0]
         if self.body.count( head ) > 1: self.alive = False 
@@ -33,10 +34,12 @@ class Snake( object ):
         if scal_prod == 0:
             self.vector = direction
 
+    #make sure fruit not on top of body
     def gen_fruit( self ):
         while self.fruit in self.body:
             self.fruit    = ( randrange( MIN_X, MAX_X ), randrange( MIN_Y, MAX_Y ) )
 
+    #score: length of snake
     def get_score( self ):
         return len( self.body ) - self.init_len
 

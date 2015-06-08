@@ -17,17 +17,24 @@ from random                         import randrange
 class World( ShowBase ):
     def __init__ ( self ):
         ShowBase.__init__( self )
+
+        #set theme (mode) flags 
         self.mode           = False
         self.choose_mode    = False
         self.start = False
+
+
         self.disableMouse( )
         self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
         self.snake.gen_fruit( )
 
+        #generate text with score, and options
         self.escape_text    = genLabelText( "ESC  : Quit", 0 )
         self.restart_text    = genLabelText( "R  : Restart", 1 )
         self.mode_text      = genLabelText( "Press 'a' for caterpillar mode and 'd' for block mode", 3)
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
+        
+        #initialize varaibles managing snake and bomb nodes 
         self.bricks         = deque()
         self.wall           = deque()
         self.bombs          = deque()
@@ -37,6 +44,7 @@ class World( ShowBase ):
         self.top_score = first_line
         self.top_score_text          = genLabelText( "Top Score: %s" % self.top_score,2, left =True)
 
+        #initialize keyboard values
         self.accept( "escape",      sys.exit )
         self.accept( "r",       self.game_restart )
 
@@ -48,6 +56,7 @@ class World( ShowBase ):
         self.accept( "a",       self.toggle_mode_one)
         self.accept("d",        self.toggle_mode_two)
 
+        #initialize game variables
         self.game_task      = taskMgr.add( self.game_loop, "GameLoop" )
         self.game_task.last = 0
         self.period         = 0.15
@@ -57,8 +66,10 @@ class World( ShowBase ):
         
 
     def game_loop( self, task ):
+        #check that player has chosen a mode/theme
         if self.start == True:
             dt = task.time - task.last
+            #if timer power-up triggered, count down from 10 
             if self.timer_flag:
                 if self.timer_start == 0:
                     self.timer_start = task.time
@@ -72,9 +83,9 @@ class World( ShowBase ):
                 return task.done
             if self.pause:
                 return task.cont
-        
             elif dt >= self.period:
                 task.last = task.time
+                #check if snake has hit bomb
                 self.check_bomb( )
                 self.snake.move_forward( )
                 self.snake.check_state( )
@@ -98,6 +109,7 @@ class World( ShowBase ):
             return task.cont
 
     def game_restart( self ):
+        #delete existing bomb, fruit and snake nodes
         for point in self.bricks:
             point.removeNode()
         for bomb in self.bombs:
@@ -108,6 +120,8 @@ class World( ShowBase ):
         self.bricks         = deque()
         self.wall           = deque()
         self.bombs           = deque()
+
+        #update high score from text file
         with open('topscore.txt', 'r') as f:
             best_score = f.readline()
             f.close()
@@ -115,6 +129,8 @@ class World( ShowBase ):
         self.top_score_text.removeNode()
         self.top_score_text          = genLabelText( "Top Score: %s" % self.top_score,2, left =True)
         self.score.removeNode()
+
+        #reinitialize global variables
         self.taskMgr.remove("GameLoop")
         self.choose_mode    = False
         self.start          = False
@@ -128,10 +144,12 @@ class World( ShowBase ):
         self.pause          = False
         self.timer_start    = 0
 
+        #recreate snake, fruit and score nodes
         self.snake          = snake.Snake( body=[ (0, 1), (-1, 1), (-2, 1) ], fruit=(0, 1) )
         self.snake.gen_fruit( )
         self.score          = genLabelText( "SCORE: %s" % self.snake.get_score( ), 0, left=False )
 
+        #reset keys
         self.accept( "arrow_up",    self.snake.turn, [ POS_Y ] )
         self.accept( "arrow_down",  self.snake.turn, [ NEG_Y ] )
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
@@ -141,27 +159,29 @@ class World( ShowBase ):
 
 
 
-
+    #check if player has set a top score saved in txt file
     def check_top_score(self):
         if self.snake.get_score( ) > self.top_score:
             self.top_score = self.snake.get_score( )
-            logging.warning(self.top_score)
+
             with open('topscore.txt', 'w') as f:
                 f.write(str(self.top_score))
                 f.close()
 
-
+    #load snake images
     def draw_snake( self ):
         for point in self.snake.body:
             brick = loadObject( "cat", self.mode, pos=Point2( point[ X ], point[ Y ] ) )
             self.bricks.append( brick )
 
-    def draw_wall( self ):
+    #load bomb images 
+    def draw_bomb( self ):
         for square in self.wall:
             bomb = loadObject( "bomb", self.mode, pos=Point2( square[ X ], square[ Y ] ) )
             self.bombs.append( bomb )
 
-    def gen_wall( self ):
+    #generate points for bombs
+    def gen_bomb( self ):
         while (len(self.wall) < 3):
             max_x_bomb_coord = (self.snake.fruit[X]+3) if ((self.snake.fruit[X] + 3) < MAX_X) else MAX_X-1
             max_y_bomb_coord = (self.snake.fruit[Y]+3) if ((self.snake.fruit[Y] + 3) < MAX_Y) else MAX_Y-1
@@ -177,7 +197,7 @@ class World( ShowBase ):
             if (next != bomb) and (bomb!=self.snake.fruit):
                 self.wall.append(bomb)
 
-    #
+    #check that snake hasn't hit bomb (bomb isn't next)
     def check_bomb( self ):
         head = self.snake.body[0]
         next = ( head[X] + self.snake.vector[X], head[Y] + self.snake.vector[Y] )
@@ -186,7 +206,7 @@ class World( ShowBase ):
                 self.snake.alive = False
 
 
-
+    #check if snake has found fruit, if so update head to fruit
     def update_snake( self ):
         try:
             for i in xrange( len( self.snake.body ) ):
@@ -204,6 +224,7 @@ class World( ShowBase ):
                 self.wall = deque()
                 self.bombs = deque()
 
+    #reset all settings changed by power-ups back to normal
     def reset(self):
         #self.period         = 0.15
         if self.timer_flag:
@@ -216,6 +237,7 @@ class World( ShowBase ):
         self.accept( "arrow_left",  self.snake.turn, [ NEG_X ] )
         self.accept( "arrow_right", self.snake.turn, [ POS_X ] )
 
+    #generate a fruit/power-up type at random
     def make_fruit( self ):
         randNumber = randrange(0, 10,1)
       
@@ -227,8 +249,8 @@ class World( ShowBase ):
             self.speed_up()
         elif 6<randNumber<8:
             self.fruit = loadObject( "cat4", self.mode,pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
-            self.gen_wall( )
-            self.draw_wall( )
+            self.gen_bomb()
+            self.draw_bomb()
         elif 7 < randNumber < 9:
             self.fruit = loadObject( "cat3", self.mode, pos=Point2( self.snake.fruit[ X ], self.snake.fruit[ Y ] ) )
             self.speed_down()
